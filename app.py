@@ -160,7 +160,12 @@ with col4:
     st.metric("🎲 Knockout Prob", f"{knockout_prob:.1%}")
 
 # Show interpretation if error is high
-if ml_error and ml_error > 30:
+if ml_error < 5:
+    st.metric("📊 Error", f"{ml_error:.1f}%", delta="Excellent")
+elif ml_error < 15:       # 10.8% will show "Good"
+    st.metric("📊 Error", f"{ml_error:.1f}%", delta="Good")
+else:
+    st.metric("📊 Error", f"{ml_error:.1f}%", delta="High"):
     st.warning(f"""
     **⚠️ ML error is {ml_error:.1f}% – What does this mean?**  
     - Binomial price = **${binomial_price:.4f}** (very low)  
