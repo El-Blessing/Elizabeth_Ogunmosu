@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 from pricer import price_barrier_option
 from simulator import simulate_paths
