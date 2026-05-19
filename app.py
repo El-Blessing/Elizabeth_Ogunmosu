@@ -15,6 +15,7 @@ st.markdown("Compare exact binomial tree pricing with a fast Machine Learning mo
 @st.cache_resource
 def train_ml_model():
     """Train ML model inside the app - no external files needed"""
+    np.random.seed(123)
     with st.spinner("🤖 Training ML model (30 seconds, first time only)..."):
         X = []
         y = []
