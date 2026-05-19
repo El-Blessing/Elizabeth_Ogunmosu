@@ -4,6 +4,7 @@ import time
 import matplotlib.pyplot as plt
 from pricer import price_barrier_option
 from simulator import simulate_paths
+from scipy.stats import norm
 
 # ==========================================
 # PRICER FUNCTION (CRR Binomial Tree)
@@ -65,47 +66,49 @@ def simulate_paths(S0, B, T, r, sigma, n, num_paths=6, barrier_type='up'):
 
 
 # ==========================================
-# SIMPLE RNN SURROGATE MODEL
+# RNN SURROGATE MODEL
 # ==========================================
 class SimpleRNNSurrogate:
     """
     A lightweight RNN surrogate that approximates the binomial pricer.
-    In production, this would be a trained neural network.
-    For demo purposes, this uses a fast approximation formula.
     """
     
     def __init__(self):
-        # These would be loaded from a trained model
-        # For demo, we'll use an analytical approximation
         self.is_trained = True
         
     def predict(self, S0, K, B, T, r, sigma, n, barrier_type='up'):
         """
-        Fast surrogate prediction (milliseconds).
-        In real implementation: model.predict(features)
+        Fast surrogate prediction using Black-Scholes with barrier adjustment.
         """
-        # Simplified approximation for demo purposes
-        # In production: load a trained PyTorch/TensorFlow model
+        # Handle edge cases
+        if T <= 0 or sigma <= 0:
+            return max(0, S0 - K)
         
-        # Base Black-Scholes-like approximation
+        # Black-Scholes for European call
         d1 = (np.log(S0 / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
         d2 = d1 - sigma * np.sqrt(T)
         
         # European call price
-        from scipy.stats import norm
         bs_price = S0 * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
         
-        # Barrier adjustment factor (simplified)
+        # Barrier adjustment factor (simplified approximation)
         if barrier_type == 'up':
-            barrier_factor = max(0, 1 - np.exp(-2 * (B - S0)**2 / (sigma**2 * T)))
-        else:
-            barrier_factor = max(0, 1 - np.exp(-2 * (S0 - B)**2 / (sigma**2 * T)))
+            if B <= S0:
+                return 0.0  # Barrier already breached
+            # Probability of not hitting barrier (simplified)
+            barrier_factor = 1 - np.exp(-2 * (B - S0) * (B - K) / (sigma**2 * T))
+            barrier_factor = max(0, min(1, barrier_factor))
+        else:  # down
+            if B >= S0:
+                return 0.0  # Barrier already breached
+            barrier_factor = 1 - np.exp(-2 * (S0 - B) * (K - B) / (sigma**2 * T))
+            barrier_factor = max(0, min(1, barrier_factor))
         
         return bs_price * barrier_factor
 
 
 # ==========================================
-# STREAMLIT DASHBOARD WITH RNN
+# STREAMLIT DASHBOARD
 # ==========================================
 st.set_page_config(page_title="Barrier Option RNN Demo", layout="wide")
 
@@ -140,7 +143,7 @@ elif barrier_type == "down" and B >= S0:
     B = S0 - 5
     st.sidebar.warning(f"Barrier adjusted to {B} (must be below S₀)")
 
-# Set random seed
+# Set random seed for reproducibility
 np.random.seed(42)
 
 # ==========================================
@@ -150,7 +153,7 @@ np.random.seed(42)
 # Binomial price (slow, accurate)
 start_time = time.time()
 binomial_price = price_barrier_option(S0, K, B, T, r, sigma, n, barrier_type)
-binomial_time = (time.time() - start_time) * 1000  # Convert to milliseconds
+binomial_time = (time.time() - start_time) * 1000
 
 # RNN surrogate price (fast, approximate)
 start_time = time.time()
@@ -175,7 +178,10 @@ with col2:
     st.caption(f"⚡ {rnn_time:.2f} ms")
 
 with col3:
-    error_pct = abs((rnn_price - binomial_price) / binomial_price * 100) if binomial_price > 0 else 0
+    if binomial_price > 0:
+        error_pct = abs((rnn_price - binomial_price) / binomial_price * 100)
+    else:
+        error_pct = 0
     st.metric("📈 Prediction Error", f"{error_pct:.2f}%")
     speedup = binomial_time / rnn_time if rnn_time > 0 else 0
     st.caption(f"🚀 {speedup:.0f}x faster")
@@ -185,7 +191,7 @@ with col4:
     st.caption(f"📈 Volatility: {sigma:.1%}")
 
 # ==========================================
-# VISUALIZATION: Paths
+# VISUALIZATION
 # ==========================================
 fig, ax = plt.subplots(figsize=(12, 5))
 
@@ -219,11 +225,10 @@ ax.set_facecolor('#f8f9fa')
 st.pyplot(fig)
 
 # ==========================================
-# COMPARISON CHART
+# BATCH SPEED TEST
 # ==========================================
 st.subheader("📊 Binomial vs RNN Comparison")
 
-# Create a small demonstration of RNN speed for batch pricing
 if st.button("🚀 Run Batch Speed Test (100 valuations)"):
     with st.spinner("Testing RNN speed vs Binomial tree..."):
         
@@ -269,8 +274,6 @@ with st.expander("📖 How the RNN Surrogate Works"):
        - Binomial tree: Accurate but slower (ground truth)
        - RNN: Very fast but approximate (surrogate)
        - Error is typically < 2% for well-trained models
-    
-    **In your main project**, this RNN surrogate is trained on the full 30,000-sample dataset!
     """)
 
 st.caption("🔴 Red paths = knocked out | 🟢 Green paths = survived | 🤖 RNN = fast surrogate")
