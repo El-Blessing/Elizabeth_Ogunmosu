@@ -8,12 +8,6 @@ from scipy.stats import norm
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TF warnings in Streamlit
-
-import streamlit as st
-import numpy as np
-import matplotlib.pyplot as plt
-from pricer import price_barrier_option
-from simulator import simulate_paths
 import tensorflow as tf
 
 st.set_page_config(page_title="Barrier Option Visualizer & RNN Surrogate", layout="wide")
