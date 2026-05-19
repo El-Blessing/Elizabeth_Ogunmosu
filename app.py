@@ -9,10 +9,6 @@ from scipy.stats import norm
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TF warnings in Streamlit
 import tensorflow as tf
-import pickle
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-import tensorflow as tf
 
 st.set_page_config(page_title="Barrier Option Pricing: Binomial Tree vs RNN-LSTM", layout="wide")
 
