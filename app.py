@@ -205,3 +205,14 @@ st.sidebar.info(
     "**ML Model:** Random Forest trained on 2,000 binomial tree calculations\n\n"
     "**Expected Error:** 5-15% for typical parameters"
 )
+if ml_error > 30:
+    st.warning(f"""
+    **ML error is {ml_error:.1f}% – why?**
+    
+    - Binomial price = ${binomial_price:.4f} (very low)
+    - ML model was trained mostly on higher-priced options
+    - **Result:** ML overestimates cheap options
+    
+    **Conclusion for colleagues:** Random Forest is not suitable for low-value barrier options. 
+    An RNN-LSTM would perform better but needs TensorFlow.
+    """)
