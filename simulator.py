@@ -5,6 +5,7 @@ def simulate_paths(S0, B, T, r, sigma, n, num_paths=50, barrier_type='up'):
     Generates risk-neutral GBM paths for visualization.
     Tracks barrier crossings to compute knockout probability.
     """
+    np.random.seed(42)
     dt = T / n
     paths = np.zeros((num_paths, n + 1))
     paths[:, 0] = S0
