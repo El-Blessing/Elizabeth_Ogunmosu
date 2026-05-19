@@ -213,6 +213,16 @@ with st.expander("📖 How It Works"):
     **When to use each:**
     - **Binomial Tree:** Final pricing, risk reports, regulatory filings
     - **ML Surrogate:** Real-time estimates, sensitivity analysis, large portfolios
+
+    **⚠️ ML error is {ml_error:.1f}% – What does this mean?**  
+    - Binomial price = **${binomial_price:.4f}** (very low)  
+    - ML model was trained mostly on higher-priced options  
+    - **Result:** ML overestimates cheap options like this one  
+
+    **💡 Conclusion for colleagues:**  
+    Random Forest is not suitable for low‑value barrier options.  
+    An RNN‑LSTM would perform better, but needs TensorFlow.  
+    For accurate trading decisions, always trust the **Binomial Tree price**
     """)
 
 # ================= SIDEBAR INFO =================
