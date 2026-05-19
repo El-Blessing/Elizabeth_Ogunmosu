@@ -165,7 +165,7 @@ if ml_error < 5:
 elif ml_error < 15:       # 10.8% will show "Good"
     st.metric("📊 Error", f"{ml_error:.1f}%", delta="Good")
 else:
-    st.metric("📊 Error", f"{ml_error:.1f}%", delta="High"):
+    st.metric("📊 Error", f"{ml_error:.1f}%", delta="High")
     st.warning(f"""
     **⚠️ ML error is {ml_error:.1f}% – What does this mean?**  
     - Binomial price = **${binomial_price:.4f}** (very low)  
