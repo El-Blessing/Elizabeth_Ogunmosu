@@ -159,6 +159,22 @@ with col3:
 with col4:
     st.metric("🎲 Knockout Prob", f"{knockout_prob:.1%}")
 
+# Show interpretation if error is high
+if ml_error and ml_error > 30:
+    st.warning(f"""
+    **⚠️ ML error is {ml_error:.1f}% – What does this mean?**  
+    - Binomial price = **${binomial_price:.4f}** (very low)  
+    - ML model was trained mostly on higher-priced options  
+    - **Result:** ML overestimates cheap options like this one  
+
+    **💡 Conclusion for colleagues:**  
+    Random Forest is not suitable for low‑value barrier options.  
+    An RNN‑LSTM would perform better, but needs TensorFlow.  
+    For accurate trading decisions, always trust the **Binomial Tree price**.
+    """)
+elif ml_error and ml_error > 15:
+    st.info(f"📊 ML error is {ml_error:.1f}% – acceptable for approximation purposes.")
+    
 # ================= PATH PLOT =================
 st.header("📉 Simulated Stock Price Paths")
 
@@ -205,14 +221,3 @@ st.sidebar.info(
     "**ML Model:** Random Forest trained on 2,000 binomial tree calculations\n\n"
     "**Expected Error:** 5-15% for typical parameters"
 )
-if ml_error > 30:
-    st.warning(f"""
-    **ML error is {ml_error:.1f}% – why?**
-    
-    - Binomial price = ${binomial_price:.4f} (very low)
-    - ML model was trained mostly on higher-priced options
-    - **Result:** ML overestimates cheap options
-    
-    **Conclusion for colleagues:** Random Forest is not suitable for low-value barrier options. 
-    An RNN-LSTM would perform better but needs TensorFlow.
-    """)
