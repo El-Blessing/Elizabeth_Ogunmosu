@@ -186,6 +186,6 @@ st.caption("🔴 **Red paths:** Option knocked out (barrier breached) | 🟢 **G
 with st.expander("📖 **How the RNN-LSTM Learns Option Pricing**", expanded=False):
     st.markdown("""
     ### 🎯 The Learning Task
-    
+    """)
     The RNN-LSTM model learns to approximate the binomial tree pricing function:
     
