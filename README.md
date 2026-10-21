@@ -23,7 +23,7 @@ Simpson's Rule: Approximates the area using parabolic arcs, which is generally m
 Formula used: h/3 [f(a)+4∑f(x_odd)+2∑f(x_even)+f(b)]
 
 
-# 4. Automated Step Size Selection (Adaptive Integration)
+# 4. Automated Step Size Selection
 To achieve this accuracy without requiring them to guess the correct number of sub-intervals, the application implements an iterative adaptive algorithm:
 
 The integral is calculated using the initial number of sub-intervals n.
@@ -36,5 +36,5 @@ If the error is greater than the user-defined tolerance, the loop repeats (doubl
 
 The loop terminates when the difference is smaller than the tolerance, returning the highly accurate result and the total number of intervals used.
 
-5. Conclusion
+# 5. Conclusion
 This tool successfully demonstrates that adaptive algorithms can dynamically adjust their resolution to find an accurate approximation of a definite integral. By utilizing Simpson's rule alongside the adaptive step size, the tool can achieve very high precision with fewer computational steps than a static Trapezoidal approach.
