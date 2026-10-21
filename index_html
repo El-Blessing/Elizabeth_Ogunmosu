@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numerical Integration</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h2 { text-align: center; color: #2c3e50; }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #2980b9; }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4f8;
+            border-left: 5px solid #3498db;
+            border-radius: 4px;
+            display: none; /* Hidden until calculated */
+        }
+        .results p { margin: 5px 0; font-size: 16px; }
+        .results strong { color: #2c3e50; }
+        .error { color: #e74c3c; font-weight: bold; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Numerical Integration</h2>
+    
+    <div class="form-group">
+        <label for="funcSelect">Select Function f(x):</label>
+        <select id="funcSelect">
+            <option value="x^2">f(x) = x²</option>
+            <option value="sin(x)">f(x) = sin(x)</option>
+            <option value="e^x">f(x) = e^x</option>
+            <option value="1/x">f(x) = 1/x</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="a">Lower Limit (a):</label>
+        <input type="number" id="a" value="0" step="any">
+    </div>
+
+    <div class="form-group">
+        <label for="b">Upper Limit (b):</label>
+        <input type="number" id="b" value="1" step="any">
+    </div>
+
+    <div class="form-group">
+        <label for="n">Initial Sub-intervals (n):</label>
+        <input type="number" id="n" value="10" min="1">
+    </div>
+
+    <div class="form-group">
+        <label for="tolerance">Desired Accuracy (Tolerance):</label>
+        <input type="number" id="tolerance" value="0.0001" step="0.00001" min="0.0000001">
+    </div>
+
+    <button onclick="calculateIntegrals()">Calculate</button>
+
+    <div class="error" id="errorMsg"></div>
+
+    <div class="results" id="results">
+        <p><strong>Trapezoidal Rule:</strong> <span id="trapResult"></span></p>
+        <p><strong>Simpson's Rule:</strong> <span id="simpResult"></span></p>
+        <p><em>Note: The number of sub-intervals may be automatically increased to achieve your desired accuracy.</em></p>
+    </div>
+</div>
+
+<script>
+    // 1. Define predefined functions
+    const functions = {
+        "x^2": (x) => x * x,
+        "sin(x)": (x) => Math.sin(x),
+        "e^x": (x) => Math.exp(x),
+        "1/x": (x) => 1 / x
+    };
+
+    // 2. Create an Object-Oriented Integration Class
+    class Integrator {
+        constructor(func, a, b) {
+            this.f = func;
+            this.a = a;
+            this.b = b;
+        }
+
+        // Trapezoidal Rule for a specific n
+        trapezoidal(n) {
+            const h = (this.b - this.a) / n;
+            let sum = this.f(this.a) + this.f(this.b);
+            
+            for (let i = 1; i < n; i++) {
+                sum += 2 * this.f(this.a + i * h);
+            }
+            return (h / 2) * sum;
+        }
+
+        // Simpson's Rule for a specific even n
+        simpson(n) {
+            // Simpson's rule requires n to be even
+            if (n % 2 !== 0) n++; 
+            
+            const h = (this.b - this.a) / n;
+            let sum = this.f(this.a) + this.f(this.b);
+            
+            for (let i = 1; i < n; i++) {
+                let x = this.a + i * h;
+                if (i % 2 === 0) {
+                    sum += 2 * this.f(x);
+                } else {
+                    sum += 4 * this.f(x);
+                }
+            }
+            return (h / 3) * sum;
+        }
+
+        // Automated Step Size Selection (Adaptive Integration)
+        // Doubles 'n' until the difference between current and previous iteration is less than tolerance.
+        integrateAdaptive(methodName, initialN, tolerance) {
+            let n = initialN;
+            let previousResult = 0;
+            let currentResult = 0;
+            let maxIterations = 20; // Prevents infinite loops
+
+            for (let i = 0; i < maxIterations; i++) {
+                if (methodName === 'trapezoidal') {
+                    currentResult = this.trapezoidal(n);
+                } else {
+                    currentResult = this.simpson(n);
+                }
+
+                // Check accuracy (skip check on first iteration)
+                if (i > 0 && Math.abs(currentResult - previousResult) < tolerance) {
+                    return { result: currentResult, n: n };
+                }
+
+                previousResult = currentResult;
+                n *= 2; // Double the intervals for the next iteration
+            }
+            
+            return { result: currentResult, n: n, warning: "Max iterations reached." };
+        }
+    }
+
+    // 3. UI Controller Function
+    function calculateIntegrals() {
+        // Get inputs
+        const funcKey = document.getElementById('funcSelect').value;
+        const a = parseFloat(document.getElementById('a').value);
+        const b = parseFloat(document.getElementById('b').value);
+        let n = parseInt(document.getElementById('n').value);
+        const tolerance = parseFloat(document.getElementById('tolerance').value);
+
+        // Validation
+        const errorMsg = document.getElementById('errorMsg');
+        if (a >= b) {
+            errorMsg.textContent = "Error: Lower limit (a) must be less than upper limit (b).";
+            errorMsg.style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            return;
+        }
+        if (n < 1 || isNaN(n)) n = 1;
+        errorMsg.style.display = 'none';
+
+        // Initialize Integrator
+        const integrator = new Integrator(functions[funcKey], a, b);
+
+        // Calculate
+        const trapData = integrator.integrateAdaptive('trapezoidal', n, tolerance);
+        const simpData = integrator.integrateAdaptive('simpson', n, tolerance);
+
+        // Display Results
+        document.getElementById('trapResult').innerHTML = 
+            `${trapData.result.toFixed(6)} <br><small>(Used n = ${trapData.n})</small>`;
+        document.getElementById('simpResult').innerHTML = 
+            `${simpData.result.toFixed(6)} <br><small>(Used n = ${simpData.n})</small>`;
+        
+        document.getElementById('results').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
